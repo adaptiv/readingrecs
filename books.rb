@@ -1,14 +1,23 @@
-require 'sinatra'
 require 'json'
+require 'asin'
 
-get '/books.json' do
-  content_type 'application/json'
+
+ASIN::Configuration.configure(secret:        "DDbiClsE5ponhMcdumEq77kDtdSXB5MSj+7OXyp0",
+                              key:           "AKIAJQDZ4SYUYSLDGWJA",
+                              associate_tag: 'adaptiv_20')
+client = ASIN::Client.instance
+
+json = ["081297381X", "0932633021", "0321503627", "0884271951"].map do |asin|
+  items = client.lookup asin
+  book  = items.first
   {
-    title: "The Black Swan: Second Edition: The Impact of the Highly Improbable: With a new section: \"On Robustness and Fragility\"",
-    author: "Nassim Nicholas Taleb",
-    image_url: "http://ecx.images-amazon.com/images/I/41CeS0f8VPL.jpg",
-    buy_url: "http://www.amazon.com/The-Black-Swan-Improbable-Robustness/dp/081297381X%3FSubscriptionId%3DAKIAJQDZ4SYUYSLDGWJA%26tag%3Dadaptiv_20%26linkCode%3Dxm2%26camp%3D2025%26creative%3D165953%26creativeASIN%3D081297381X",
-    adaptiv_review: "This is a short review.
+    title:          book.title,
+    author:         book.raw.ItemAttributes.Author,
+    image_url:      book.image_url,
+    buy_url:        book.details_url,
+    adaptiv_review: "This is a short review for #{book.title}.
 With a line break."
-  }.to_json
-end
+  } unless book.nil?
+end.to_json
+
+puts json
